@@ -13,7 +13,6 @@
 int main(int argc, char const *argv[])
 {
     mqd_t mqd;
-    char *write_msg = "hello";
     char *my_mq = "/queue";
     struct mq_attr attr;
 
@@ -25,7 +24,7 @@ int main(int argc, char const *argv[])
         attr.mq_maxmsg = MAX_NUM_MSG;
         attr.mq_msgsize = MAX_SIZE / 2;
 
-        mqd = mq_open(my_mq, O_RDONLY | O_CREAT, &attr);
+        mqd = mq_open(my_mq, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, &attr);
 
         if (mqd < 0)
         {
@@ -38,6 +37,7 @@ int main(int argc, char const *argv[])
         char command[100];
         sprintf(command, "echo  \"%s\" | wc -w", buf);
         system(command);
+        mq_unlink(my_mq);
         mq_close(mqd);
     }
     else
@@ -46,9 +46,9 @@ int main(int argc, char const *argv[])
         char file_buf[MAX_SIZE];
         attr.mq_maxmsg = MAX_NUM_MSG;
         attr.mq_msgsize = MAX_SIZE;
-        mqd = mq_open(my_mq, O_CREAT | O_RDWR, &attr);
+        mqd = mq_open(my_mq, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH, &attr);
 
-        int fd = open("./content.txt", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
+        int fd = open("content.txt", O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
         ssize_t x = read(fd, file_buf, MAX_SIZE);
 
         // printf("Message: %s\n", file_buf);
@@ -63,6 +63,7 @@ int main(int argc, char const *argv[])
             perror("mq_send");
             return -1;
         }
+        mq_unlink(my_mq);
         mq_close(mqd);
     }
 
