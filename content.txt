@@ -1,0 +1,3 @@
+This is a content text file.
+
+There should be at least 10, maybe even 20 characters in this file.
