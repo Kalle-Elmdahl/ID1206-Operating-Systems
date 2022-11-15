@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "*.js": "javascript",
+        "__threading_support": "c"
+    }
+}
