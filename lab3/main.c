@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     const char *filename = argv[1];
 
     FILE *addresses = fopen(filename, "r");
-    FILE *memory = fopen("BACKING_STORE.bin", "r");
+    FILE *memory = fopen("BACKING_STORE.bin", "rb");
 
     if (!addresses)
         return 1;
@@ -38,7 +38,6 @@ int main(int argc, char *argv[])
         fseek(memory, physical, SEEK_SET);
         char read = 0;
         fread(&read, sizeof(read), 1, memory);
-        read = read & 0xff;
         printf("Virtual address: %d Physical address: %d Value: %X, %d\n", number, physical, read, read);
     }
 
