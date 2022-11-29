@@ -1,52 +1,38 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define PAGE_ENTRIES 256
+#define BIN "BACKING_STORE.bin"
 
 int page_table[PAGE_ENTRIES];
 
 int main(int argc, char *argv[])
 {
-    if (argc < 2)
-        return 1;
-    const char *filename = argv[1];
+    FILE *addresses, *memory;
+    unsigned int address, counter = 0;
 
-    FILE *addresses = fopen(filename, "r");
-    FILE *memory = fopen("BACKING_STORE.bin", "rb");
-
-    if (!addresses)
+    if (argc < 2 || !(addresses = fopen(argv[1], "r")))
         return 1;
 
-    unsigned int number;
-    int counter = 0;
+    memory = fopen(BIN, "rb");
 
     for (int i = 0; i < PAGE_ENTRIES; i++)
-    {
-        i[page_table] = -1;
-    }
+        page_table[i] = -1;
 
-    while (fscanf(addresses, "%d,", &number) > 0)
+    while (fscanf(addresses, "%d,", &address) > 0)
     {
-        int page_number = number >> 8;
+        int page_number = address >> 8;
         if (page_table[page_number] == -1)
-        {
-            page_table[page_number] = counter;
-            counter++;
-        }
+            page_table[page_number] = counter++ << 8;
 
-        int physical = number & 0xff | (page_table[page_number] << 8);
+        int physical = address & 0xff | page_table[page_number];
+        char read = 0;
 
         fseek(memory, physical, SEEK_SET);
-        char read = 0;
         fread(&read, sizeof(read), 1, memory);
-        printf("Virtual address: %d Physical address: %d Value: %X, %d\n", number, physical, read, read);
+        printf("Virtual address: %d Physical address: %d Value: %X, %d\n", address, physical, read, read);
     }
 
     fclose(addresses);
 
     return 0;
 }
-
-
-
-
-
