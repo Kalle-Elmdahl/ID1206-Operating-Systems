@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 
     FILE *addresses, *memory;
     tlb_t *TLB = NULL;
-    unsigned int address, counter = 0, miss_counter = 0;
+    unsigned int address, counter = 0, miss_counter = 0, tlb_hit_counter = 0, page_fault_counter = 0;
     if (argc < 2 || !(addresses = fopen(argv[1], "r")))
         return 1;
 
@@ -39,15 +39,19 @@ int main(int argc, char *argv[])
         {
             miss_counter++;
 
-            if (page_table[page_number] == -1)
-            {
+            if (page_table[page_number] == -1) {
                 frame_number = counter++ << 8;
                 page_table[page_number] = frame_number;
             }
-            else
+            else {
+                page_fault_counter++;
                 frame_number = page_table[page_number];
+            }
+
 
             TLB = add_to_tlb(TLB, page_number, frame_number);
+        } else {
+            tlb_hit_counter++;
         }
 
         int physical = address & 0xff | frame_number;
@@ -55,10 +59,12 @@ int main(int argc, char *argv[])
 
         fseek(memory, address, SEEK_SET);
         fread(&read, sizeof(read), 1, memory);
-        printf("Virtual address: %d Physical address: %d Value: %X, %d\n", address, physical, read, read);
+        printf("Virtual address: %d Physical address: %d Value: %d\n", address, physical, read);
     }
 
-    printf("Miss rate: %u\n", miss_counter / 1000 * 100);
+    printf("TLB miss rate: %d%%\n", miss_counter/10);
+    printf("TLB hit rate: %d%%\n", tlb_hit_counter/10);
+    printf("Page fault rate %d%%\n", page_fault_counter/10);
 
     fclose(addresses);
 
