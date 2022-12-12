@@ -24,15 +24,22 @@ int main(int argc, char const *argv[])
         arrayOfrequest[i] = rand() % CYLINDER;
     }
 
-    printf("FCFS: %d\n", fcfs(arrayOfrequest, start));
-    printf("SSTF: %d\n", sstf(arrayOfrequest, start));
-    //  printf("SCAN: %d\n", fcfs(arrayOfrequest, start));
+    printf("*TESTING FCFS*\n");
+    printf("Head movements: %d\n\n", fcfs(arrayOfrequest, start));
+
+
+    printf("*TESTING SSTF*\n");
+    printf("Head movements: %d\n\n", sstf(arrayOfrequest, start));
+    
+    printf("*TESTING SCAN*\n");
+    printf("Head movements: %d\n\n", scan(arrayOfrequest, start));
     //  printf("C-SCAN: %d\n", fcfs(arrayOfrequest, start));
     //  printf("LOOK: %d\n", fcfs(arrayOfrequest, start));
     //  printf("C-LOOK: %d\n", fcfs(arrayOfrequest, start));
 
     return 0;
 }
+
 
 int fcfs(int *arrayOfrequest, int start)
 {
@@ -55,41 +62,53 @@ int comp(const void *elem1, const void *elem2)
     return 0;
 }
 
+void printlog(int adj, int start, int * arr) {
+    printf("adj-index: %d, start: %d, {adj-1: %d, adj: %d, adj+1: %d} \n", adj, start, arr[adj - 1], arr[adj], arr[adj + 1]);
+}
+
 /**
  * Shortest Seek Time First
  */
 int sstf(int *arrayOfrequest, int start)
 {
-    int result = 0;
-    int *sortedArray = malloc(REQUESTS * sizeof(int));
 
+    // Initialize result and adj to 0
+    int result = 0;
+    int adj = 0;
+
+    // Create a copy of the array of requests and sort it in ascending order
+    int *sortedArray = malloc(REQUESTS * sizeof(int));
     memcpy(sortedArray, arrayOfrequest, REQUESTS * sizeof(int));
     qsort(sortedArray, REQUESTS, sizeof(*arrayOfrequest), comp);
 
-    int adj = 0;
-    while (abs(sortedArray[adj + 1] - start) <= abs(sortedArray[adj] - start))
+    // Find the first request in the sorted array that is closer to the starting 
+    // position than the previous request
+    while (abs(sortedArray[adj + 1] - start) <= abs(sortedArray[adj] - start)) {
         adj++;
+    }
 
-    printf("adj: %d, start: %d, {%d, %d, %d}", adj, start, sortedArray[adj - 1], sortedArray[adj], sortedArray[adj + 1]);
+    // Print some debugging information
+    printlog(adj, start, sortedArray);
 
-    // Traverse the list to the left and record distances
-    // Current position: pos
-
-    // <--[shortest] + []-->
-
-    //  start : 12
-    // [5, 10, 11, 14]
-
+    // Initialize variables for processing requests
     int curr_val = sortedArray[adj];
-    int left_pos = adj, right_pos = adj;
-    result += abs(sortedArray[adj] - start); // result = 1
+    int left_pos = adj-1, right_pos = adj+1;
 
-    while (left_pos > 0 || right_pos < REQUESTS - 1)
+    // Add distance from starting position to first request
+    result += abs(sortedArray[adj] - start);
+
+    // Process requests until we have processed all requests
+
+    int requests_processed = 0;
+
+    while (left_pos >= 0 && right_pos < REQUESTS - 1)
     {
-
+        // Calculate distances to requests to the left and right of the current request
         int dl = left_pos > 0 ? abs(sortedArray[left_pos - 1] - curr_val) : INFINITY;
         int dr = right_pos < (REQUESTS - 1) ? abs(sortedArray[right_pos + 1] - curr_val) : INFINITY;
+        
 
+        // Move to the request that is closer, and update variables accordingly
         if (dl < dr)
         {
             result += dl;
@@ -102,70 +121,78 @@ int sstf(int *arrayOfrequest, int start)
             right_pos++;
             curr_val = sortedArray[right_pos];
         }
+
+        requests_processed ++;
     }
 
-    /*
-        int adj_igen = 0;
-        for (int i = 0; i < REQUESTS; i++)
-        {
-            int dist = arrayOfrequest[i] - start;
-            if (dist < arrayOfrequest[adj_igen])
-            {
-                adj_igen = i;
-            }
-        }
 
-        printf("adj_igen = %d \n", adj_igen);
-        */
-
-    // 1. Calculate distance from head to each point
-
-    // 2. Sort according to distance to each point (from head)
-
-    // 3. Traverse the path and calculate the distance _between the points_ traversed
-
-    // 4. accumulate distances, current position is new head
-
+    // Return the total distance the disk head moved
     return result;
 }
 
-int calculateDirection(int *sortedArray, int start)
+
+int calculateDirection(int *sortedArray, int start, int adj)
 {
     if (sortedArray[adj] < start)
     { // direction left
-        direction = 0;
+        return 0;
     }
     else if (sortedArray[adj] > start)
     { // direction right
-        direction = 1;
+        printf("%d är mer än %d", sortedArray[adj], start);
+        return 1;
     }
     else
     {
-        
+        int newAdj = 0;
+        while (abs(sortedArray[adj + 1] - start) <= abs(sortedArray[adj] - start))
+        newAdj++;
+        return calculateDirection(sortedArray, adj, newAdj);
     }
 }
 
 int scan(int *arrayOfrequest, int start)
 {
+    // Initialize result and adj to 0
     int result = 0;
-    int *sortedArray = malloc(REQUESTS * sizeof(int));
-    int direction;
+    int adj = 0;
+    int direction = -1;
 
+    // Create a copy of the array of requests, which we will sort
+    int *sortedArray = malloc(REQUESTS * sizeof(int));
     memcpy(sortedArray, arrayOfrequest, REQUESTS * sizeof(int));
     qsort(sortedArray, REQUESTS, sizeof(*arrayOfrequest), comp);
 
-    int adj = 0;
-    while (abs(sortedArray[adj + 1] - start) <= abs(sortedArray[adj] - start))
+    // Find the position in the sorted array that is closest to the starting position
+    while (abs(sortedArray[adj + 1] - start) <= abs(sortedArray[adj] - start)) {
         adj++;
+    }
 
-    direction = calculateDirection(*sortedArray, start);
-    printf("adj: %d, start: %d, {%d, %d, %d}", adj, start, sortedArray[adj - 1], sortedArray[adj], sortedArray[adj + 1]);
-    return -1;
+    int startcpy = start;
+    for (int i = adj; i > 0 && adj > 0; i--) {
+        result += abs(sortedArray[i] - startcpy);
+        startcpy = sortedArray[i];
+    }
+    
+    int max = REQUESTS - 1;
+
+    for (int i = adj + 1; i < max && adj < max ; i++) {
+        result += abs(sortedArray[i] - startcpy);
+        startcpy= sortedArray[i];
+    }
+    printlog(adj, start, sortedArray);
+    return result;
 }
 
 
 int cscan(int *arrayOfrequest, int start)
 {
+    // Initialize result and adj to 0
+    int result = 0;
+    int adj = 0;
+    int direction = -1;
+
+
     return -1;
 }
 
