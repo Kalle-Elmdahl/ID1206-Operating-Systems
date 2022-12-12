@@ -98,7 +98,6 @@ int sstf(int *arrayOfrequest, int start)
     result += abs(sortedArray[adj] - start);
 
     // Process requests until we have processed all requests
-
     int requests_processed = 0;
 
     while (left_pos >= 0 && right_pos < REQUESTS - 1)
@@ -168,17 +167,15 @@ int scan(int *arrayOfrequest, int start)
         adj++;
     }
 
-    int startcpy = start;
-    for (int i = adj; i > 0 && adj > 0; i--) {
-        result += abs(sortedArray[i] - startcpy);
-        startcpy = sortedArray[i];
+    int current = start;
+    for (int i = adj; i >= 0 && adj >= 0; i--) {
+        result += abs(sortedArray[i] - current);
+        current = sortedArray[i];
     }
-    
-    int max = REQUESTS - 1;
 
-    for (int i = adj + 1; i < max && adj < max ; i++) {
-        result += abs(sortedArray[i] - startcpy);
-        startcpy= sortedArray[i];
+    for (int i = adj + 1; i < REQUESTS && adj < REQUESTS ; i++) {
+        result += abs(sortedArray[i] - current);
+        current= sortedArray[i];
     }
     printlog(adj, start, sortedArray);
     return result;
